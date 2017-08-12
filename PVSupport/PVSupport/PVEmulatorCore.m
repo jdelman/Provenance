@@ -8,11 +8,17 @@
 
 #import "PVEmulatorCore.h"
 #import "NSObject+PVAbstractAdditions.h"
-#import <mach/mach_time.h>
-#import "OETimingUtils.h"
+#import "OERingBuffer.h"
+#import "RealTimeThread.h"
 
 static Class PVEmulatorCoreClass = Nil;
 static NSTimeInterval defaultFrameInterval = 60.0;
+
+NSString *const PVEmulatorCoreErrorDomain = @"com.jamsoftonline.EmulatorCore.ErrorDomain";
+
+@interface PVEmulatorCore()
+@property (nonatomic, assign) CGFloat  framerateMultiplier;
+@end
 
 @implementation PVEmulatorCore
 
@@ -30,6 +36,7 @@ static NSTimeInterval defaultFrameInterval = 60.0;
 	{
 		NSUInteger count = [self audioBufferCount];
         ringBuffers = (__strong OERingBuffer **)calloc(count, sizeof(OERingBuffer *));
+        self.emulationLoopThreadLock = [NSLock new];
 	}
 	
 	return self;
@@ -57,9 +64,9 @@ static NSTimeInterval defaultFrameInterval = 60.0;
 		{
 			isRunning  = YES;
 			shouldStop = NO;
-            framerateMultiplier = 1.0;
-			
-			[NSThread detachNewThreadSelector:@selector(frameRefreshThread:) toTarget:self withObject:nil];
+            self.gameSpeed = GameSpeedNormal;
+            [NSThread detachNewThreadSelector:@selector(emulationLoopThread) toTarget:self withObject:nil];
+
 		}
 	}
 }
@@ -90,62 +97,97 @@ static NSTimeInterval defaultFrameInterval = 60.0;
 {
 	shouldStop = YES;
     isRunning  = NO;
+
+    [self.emulationLoopThreadLock lock]; // make sure emulator loop has ended
+    [self.emulationLoopThreadLock unlock];
 }
 
-- (void)frameRefreshThread:(id)anArgument
+- (void)updateControllers
 {
-    gameInterval = 1.0 / ([self frameInterval] * framerateMultiplier);
-    NSTimeInterval gameTime = OEMonotonicTime();
-    OESetThreadRealtime(gameInterval, 0.007, 0.03); // guessed from bsnes
+    //subclasses may implement for polling
+}
 
-    while (!shouldStop)
-    {
-        if (self.shouldResyncTime)
-        {
-            self.shouldResyncTime = NO;
-            gameTime = OEMonotonicTime();
-        }
+- (void) emulationLoopThread {
 
-        gameTime += gameInterval;
+    // For FPS computation
+    int frameCount = 0;
+    NSDate *fpsCounter = [NSDate date];
+    
+    //Setup Initial timing
+    NSDate *origin = [NSDate date];
+    NSTimeInterval sleepTime;
+    NSTimeInterval nextEmuTick = GetSecondsSince(origin);
+    
+    [self.emulationLoopThreadLock lock];
 
-        @autoreleasepool
-        {
-            if (isRunning)
-            {
-                if (_fastForward)
-                {
-                    [self executeFrame];
-                }
-                else
-                {
-                    @synchronized(self)
-                    {
-                        [self executeFrame];
-                    }
-                }
+    //Become a real-time thread:
+    MakeCurrentThreadRealTime();
+
+    //Emulation loop
+    while (!shouldStop) {
+
+        [self updateControllers];
+        
+        @synchronized (self) {
+            if (isRunning) {
+                [self executeFrame];
             }
         }
+        frameCount += 1;
+
+        nextEmuTick += gameInterval;
+        sleepTime = nextEmuTick - GetSecondsSince(origin);
+        if(sleepTime >= 0) {
+            [NSThread sleepForTimeInterval:sleepTime];
+        }
+        else if (sleepTime < -0.1) {
+            // We're behind, we need to reset emulation time,
+            // otherwise emulation will "catch up" to real time
+            origin = [NSDate date];
+            nextEmuTick = GetSecondsSince(origin);
+        }
+
+        // Compute FPS
+        NSTimeInterval timeSinceLastFPS = GetSecondsSince(fpsCounter);
+        if (timeSinceLastFPS >= 0.5) {
+            self.emulationFPS = (double)frameCount / timeSinceLastFPS;
+            frameCount = 0;
+            fpsCounter = [NSDate date];
+        }
         
-        OEWaitUntil(gameTime);
+    }
+    
+    [self.emulationLoopThreadLock unlock];
+}
+
+- (void)setGameSpeed:(GameSpeed)gameSpeed
+{
+    _gameSpeed = gameSpeed;
+    
+    switch (gameSpeed) {
+        case GameSpeedSlow:
+            self.framerateMultiplier = 0.2;
+            break;
+        case GameSpeedNormal:
+            self.framerateMultiplier = 1.0;
+            break;
+        case GameSpeedFast:
+            self.framerateMultiplier = 5.0;
+            break;
     }
 }
 
-- (void)setFastForward:(BOOL)fastForward
+- (BOOL)isSpeedModified
 {
-    _fastForward = fastForward;
+	return self.gameSpeed != GameSpeedNormal;
+}
 
-    if (_fastForward)
-    {
-        framerateMultiplier = 5.0; // 5x speed
-    }
-    else
-    {
-        framerateMultiplier = 1.0; // normal speed
-    }
+- (void)setFramerateMultiplier:(CGFloat)framerateMultiplier
+{
+	_framerateMultiplier = framerateMultiplier;
 
     NSLog(@"multiplier: %.1f", framerateMultiplier);
     gameInterval = 1.0 / ([self frameInterval] * framerateMultiplier);
-    OESetThreadRealtime(gameInterval, 0.007, 0.03); // guessed from bsnes
 }
 
 - (void)executeFrame

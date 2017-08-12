@@ -123,8 +123,28 @@
     return nil;
 }
 
--(PViCadeGamepad*) extendedGamepad {
+-(GCExtendedGamepad*) extendedGamepad {
     return _iCadeGamepad;
 }
+
+- (NSString *)vendorName {
+    return @"iCade";
+}
+
+// don't know if it's nessesary but seems good
+- (BOOL)isAttachedToDevice {
+    return FALSE;
+}
+
+-(GCControllerPlayerIndex) playerIndex {
+    return _playerIndex;
+}
+
+// don't know if it's nessesary to set a specific index but without implementing this method the app crashes
+-(void) setPlayerIndex:(GCControllerPlayerIndex) playerIndex {
+     _playerIndex = playerIndex;
+}
+
+
 
 @end

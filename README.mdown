@@ -1,10 +1,12 @@
 # Provenance
 An iOS & tvOS Frontend for multiple emulators
 
-###Building Provenance
-[See the instructions on the wiki](https://github.com/jasarien/Provenance/wiki/Building-Provenance) And follow them _to the letter_. Any issues raised that clearly demonstrate that the instructions haven't been followed will be closed.
+![Provenance](https://static1.squarespace.com/static/584075871b631b9469f02885/t/58571894725e25a3d82cd6a9/1482102948632/?format=2500w)
 
-###Why 'Provenance'?
+### Building Provenance
+[See the instructions on the wiki](https://github.com/jasarien/Provenance/wiki/Building-Provenance) and follow them _to the letter_. Any issues raised that clearly demonstrate that the instructions haven't been followed will be closed.
+
+### Why 'Provenance'?
 
 I was looking for a word with a similar meaning to Genesis and came across Provenance:
 
@@ -13,7 +15,7 @@ I was looking for a word with a similar meaning to Genesis and came across Prove
 > **Noun**  
 > > The beginning of something's existence; something's origin.
 
-###Systems currently supported by Provenance:
+### Systems currently supported by Provenance:
 
 - Sega
     - SG-1000
@@ -21,22 +23,25 @@ I was looking for a word with a similar meaning to Genesis and came across Prove
     - Genesis / Mega Drive
     - MegaCD [See wiki](https://github.com/jasarien/Provenance/wiki/Sega-MegaCD-Instructions)
     - Game Gear
+    - 32X
 - Nintendo
-    - NES
+    - NES (Nintendo Entertainment System)
     - Famicom Disk System [See Wiki](https://github.com/jasarien/Provenance/wiki/Famicom-Disk-System-Instructions)
     - SNES (Super Nintendo)
     - Gameboy / Gameboy Color
     - Gameboy Advance
+- Atari
+    - 2600
+    - 7800
 
-###Features
+### Features
 
 - Very accurate & full speed emulation
 - Stereo sound
 - Save States
 - Battery saves (native game saves, i.e. Sonic 3, Pokémon, etc)
-- Configurable on-screen controls
-    - Position them how you like, and adjust their opacity so they don't get in your way
-    - Portrait and landscape support
+- Adjust onscreen control opacity so they don't get in your way
+- Portrait and landscape support
 - Supports all [MFi game controllers](https://mficontrollers.afterpad.com/), and some iCade Controllers
 - Local multiplayer with external controllers
 - Built-in web server
@@ -51,24 +56,25 @@ I was looking for a word with a similar meaning to Genesis and came across Prove
     - Custom artwork is also supported
 - Game library searching
 - Supports iOS 8+
-    - 3D Touch shortcuts for recent games on iPhone 6S/Plus
+    - 3D Touch shortcuts for recent games (iPhone 6s and later)
+    - Taptic Engine Feedback for button presses (iPhone 7 and later)
 - Supports Apple TV tvOS 9+
-    - TopShelf support
+    - TopShelf support [See instructions](https://github.com/jasarien/Provenance/pull/242)
 
 Feel free to suggest/request features using the Issues page, but please read all issues (open *and* closed) before raising new ones to avoid duplicates.
 
-Please note that this is an open source project done in the free time of the author and contributors and new features and new emulator cores may take time.
-Adding a comment to an existing issue does not help speed up the development in any way.
-
-###Importing ROMs
+### Importing ROMs
 [See the instructions on the wiki](https://github.com/jasarien/Provenance/wiki/Importing-ROMs)
 
-###Screenshots
+### Screenshots
 [Provenance Screenshots](http://jamesaddyman.com/provenance/screenshots)
 
-#Attributions
+# Contributor Discussion
+If you're a contributor, or would like to contribute, there is a developer-focussed Slack at [provenance-dev.slack.com](http://provenance-dev.slack.com). Request an invite to join the conversation.
 
-Sega system emulation is provided by [Genesis Plus GX](http://code.google.com/p/genplus-gx/), originally written by Charles Mac Donald, and later improved by Eke-Eke.
+# Attributions
+
+Sega system emulation is provided by [Genesis Plus GX](https://bitbucket.org/eke/genesis-plus-gx/), originally written by Charles Mac Donald, and later improved by Eke-Eke.
 
 NES/Famicom Disk System emulation is provided by [FCEUX](http://www.fceux.com/web/home.html).
 
@@ -78,9 +84,15 @@ Gameboy Advance emulation is provided by [Visualboy Advance](http://sourceforge.
 
 Gameboy/Gameboy Color emulation is provided by [Gambatte](http://gambatte.sourceforge.net/).
 
+Atari 2600 emulation is provided by [Stella](http://stella.sourceforge.net/).
+
+Atari 7800 emulation is provided by [ProSystem](http://gstanton.github.io/ProSystem1_3/).
+
+Sega 32X emulation is provided by [PicoDrive](https://github.com/notaz/picodrive).
+
 The specific implementations used in Provenance are loosely based on some of the work done by [OpenEmu](http://openemu.org) [(source)](http://github.com/OpenEmu) and [RetroArch](http://www.libretro.com) [(source)](https://github.com/libretro/RetroArch).
 
-#Provenance License
+# Provenance License
 
 Copyright (c) 2016, James Addyman (JamSoft). All rights reserved.
 
@@ -105,7 +117,7 @@ The views and conclusions contained in the software and documentation are those 
 authors and should not be interpreted as representing official policies, either expressed
 or implied, of James Addyman (JamSoft).
 
-#OpenEmu License
+# OpenEmu License
 
 Copyright (c) 2016, OpenEmu Team
 

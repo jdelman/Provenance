@@ -26,8 +26,8 @@
  */
 
 #import "PVSNESEmulatorCore.h"
-#import "OERingBuffer.h"
-#import "OETimingUtils.h"
+#import <PVSupport/OERingBuffer.h>
+#import <PVSupport/PVGameControllerUtilities.h>
 #import <OpenGLES/EAGL.h>
 #import <OpenGLES/ES3/gl.h>
 
@@ -112,6 +112,8 @@ NSString *SNESEmulatorKeys[] = { @"Up", @"Down", @"Left", @"Right", @"A", @"B", 
     NSString *extensionlessFilename = [[path lastPathComponent] stringByDeletingPathExtension];
 	
     NSString *batterySavesDirectory = [self batterySavesPath];
+    
+    [super stopEmulation];
 	
     if([batterySavesDirectory length] != 0)
     {
@@ -125,17 +127,12 @@ NSString *SNESEmulatorKeys[] = { @"Up", @"Down", @"Left", @"Right", @"A", @"B", 
         Memory.SaveSRAM([filePath UTF8String]);
     }
 	
-    [super stopEmulation];
 }
 
 - (void)executeFrame
 {
     IPPU.RenderThisFrame = YES;
     S9xMainLoop();
-    if (self.controller1 || self.controller2)
-    {
-        [self pollControllers];
-    }
 }
 
 - (BOOL)loadFileAtPath:(NSString *)path
@@ -385,7 +382,7 @@ static void FinalizeSamplesAudioCallback(void *)
     }
 }
 
-- (void)pollControllers
+- (void)updateControllers
 {
     GCController *controller = nil;
 
@@ -399,10 +396,19 @@ static void FinalizeSamplesAudioCallback(void *)
             GCExtendedGamepad *pad = [controller extendedGamepad];
             GCControllerDirectionPad *dpad = [pad dpad];
 
-            S9xReportButton(playerMask | PVSNESButtonUp, dpad.up.pressed?:pad.leftThumbstick.up.pressed);
-            S9xReportButton(playerMask | PVSNESButtonDown, dpad.down.pressed?:pad.leftThumbstick.down.pressed);
-            S9xReportButton(playerMask | PVSNESButtonLeft, dpad.left.pressed?:pad.leftThumbstick.left.pressed);
-            S9xReportButton(playerMask | PVSNESButtonRight, dpad.right.pressed?:pad.leftThumbstick.right.pressed);
+            PVControllerAxisDirection axisDirection = [PVGameControllerUtilities axisDirectionForThumbstick:pad.leftThumbstick];
+
+            BOOL upPressed = dpad.up.pressed || axisDirection == PVControllerAxisDirectionUp || axisDirection == PVControllerAxisDirectionUpLeft || axisDirection == PVControllerAxisDirectionUpRight;
+            S9xReportButton(playerMask | PVSNESButtonUp, upPressed);
+            
+            BOOL downPressed = dpad.down.pressed || axisDirection == PVControllerAxisDirectionDown || axisDirection == PVControllerAxisDirectionDownLeft || axisDirection == PVControllerAxisDirectionDownRight;
+            S9xReportButton(playerMask | PVSNESButtonDown, downPressed);
+            
+            BOOL leftPressed = dpad.left.pressed || axisDirection == PVControllerAxisDirectionLeft || axisDirection == PVControllerAxisDirectionUpLeft || axisDirection == PVControllerAxisDirectionDownLeft;
+            S9xReportButton(playerMask | PVSNESButtonLeft, leftPressed);
+            
+            BOOL rightPressed = dpad.right.pressed || axisDirection == PVControllerAxisDirectionRight || axisDirection == PVControllerAxisDirectionUpRight || axisDirection == PVControllerAxisDirectionDownRight;
+            S9xReportButton(playerMask | PVSNESButtonRight, rightPressed);
 
             S9xReportButton(playerMask | PVSNESButtonB, pad.buttonA.pressed);
             S9xReportButton(playerMask | PVSNESButtonA, pad.buttonB.pressed);
